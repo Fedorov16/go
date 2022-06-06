@@ -48,8 +48,8 @@ func validate(str string) bool {
 		if !unicode.IsDigit(v) {
 			continue
 		}
-		if next := string(str[i+1]); next != "" {
-			if unicode.IsDigit(rune(next[0])) {
+		if i+1 < len(str) {
+			if unicode.IsDigit(rune(str[i+1])) {
 				return false
 			}
 		}
