@@ -10,36 +10,25 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(str string) (string, error) {
-	if str == "" {
-		return "", nil
-	}
-	if !regexpValidate(str) {
-		return "", ErrInvalidString
+	if regexpValidate(str) != nil {
+		return "", regexpValidate(str)
 	}
 
 	splitByRegexp := splitByRegex(str)
 
 	var strBuilder strings.Builder
 	var curStr string
-	for i, v := range splitByRegexp {
-		if len(v) == 1 {
-			if string(v[0]) == "\\" && splitByRegexp[i-1] == "\\" {
-				strBuilder.WriteString(v)
-			} else if string(v[0]) == "\\" {
-				continue
-			}
-			strBuilder.WriteString(v)
-			continue
-		}
+	for _, v := range splitByRegexp {
 		if string(v[0]) == "\\" {
 			if len(v) == 3 {
 				curStr = v[len(v)-2 : len(v)-1]
-			} else if string(splitByRegexp[i-1]) == "\\" {
-				curStr = "\\"
 			} else {
 				strBuilder.WriteString(string(v[len(v)-1]))
 				continue
 			}
+		} else if len(v) == 1 {
+			strBuilder.WriteString(v)
+			continue
 		} else {
 			curStr = string(v[0])
 		}
@@ -54,8 +43,14 @@ func Unpack(str string) (string, error) {
 	return strBuilder.String(), nil
 }
 
-func regexpValidate(str string) bool {
-	return !regexp.MustCompile(`(^\d|[^\\]{1}\d\d|\\[[:alpha:]])`).MatchString(str)
+func regexpValidate(str string) error {
+	if str == "" {
+		return nil
+	}
+	if regexp.MustCompile(`(^\d|[^\\]{1}\d\d|\\[[:alpha:]])`).MatchString(str) {
+		return ErrInvalidString
+	}
+	return nil
 }
 
 func splitByRegex(str string) []string {
