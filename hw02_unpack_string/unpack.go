@@ -2,9 +2,9 @@ package hw02unpackstring
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 var ErrInvalidString = errors.New("invalid string")
@@ -13,47 +13,51 @@ func Unpack(str string) (string, error) {
 	if str == "" {
 		return "", nil
 	}
-	if !validate(str) {
+	if !regexpValidate(str) {
 		return "", ErrInvalidString
 	}
 
-	var strBuilder strings.Builder
-	for _, v := range str {
-		if !unicode.IsDigit(v) {
-			strBuilder.WriteString(string(v))
-			continue
-		}
+	splitByRegexp := splitByRegex(str)
 
-		sbString := strBuilder.String()
-		curLet := string(sbString[len(sbString)-1])
-		curFactor, _ := strconv.Atoi(string(v - 1))
-		if curFactor == 0 {
-			str = sbString[:len(sbString)-1]
-			strBuilder.Reset()
-			strBuilder.WriteString(str)
+	var strBuilder strings.Builder
+	var curStr string
+	for i, v := range splitByRegexp {
+		if len(v) == 1 {
+			if string(v[0]) == "\\" && splitByRegexp[i-1] == "\\" {
+				strBuilder.WriteString(v)
+			} else if string(v[0]) == "\\" {
+				continue
+			}
+			strBuilder.WriteString(v)
 			continue
 		}
-		curStr := strings.Repeat(curLet, curFactor)
-		strBuilder.WriteString(curStr)
+		if string(v[0]) == "\\" {
+			if len(v) == 3 {
+				curStr = v[len(v)-2 : len(v)-1]
+			} else if string(splitByRegexp[i-1]) == "\\" {
+				curStr = "\\"
+			} else {
+				strBuilder.WriteString(string(v[len(v)-1]))
+				continue
+			}
+		} else {
+			curStr = string(v[0])
+		}
+		curFactor, _ := strconv.Atoi(string(v[len(v)-1]))
+		if curFactor == 0 {
+			continue
+		}
+		preparedStr := strings.Repeat(curStr, curFactor)
+		strBuilder.WriteString(preparedStr)
 	}
 
 	return strBuilder.String(), nil
 }
 
-func validate(str string) bool {
-	if unicode.IsDigit(rune(str[0])) {
-		return false
-	}
-	for i, v := range str {
-		if !unicode.IsDigit(v) {
-			continue
-		}
-		if i+1 < len(str) {
-			if unicode.IsDigit(rune(str[i+1])) {
-				return false
-			}
-		}
-	}
+func regexpValidate(str string) bool {
+	return !regexp.MustCompile(`(^\d|[^\\]{1}\d\d|\\[[:alpha:]])`).MatchString(str)
+}
 
-	return true
+func splitByRegex(str string) []string {
+	return regexp.MustCompile(`[[:alpha:]|[:punct:]]{1}\d{0,2}`).FindAllString(str, -1)
 }
