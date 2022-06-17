@@ -22,22 +22,26 @@ func Unpack(str string) (string, error) {
 		if string(v[0]) == "\\" {
 			if len(v) == 3 {
 				curStr = v[len(v)-2 : len(v)-1]
-			} else {
-				strBuilder.WriteString(string(v[len(v)-1]))
+				curFactor, _ := strconv.Atoi(string(v[len(v)-1]))
+				if curFactor != 0 {
+					preparedStr := strings.Repeat(curStr, curFactor)
+					strBuilder.WriteString(preparedStr)
+				}
 				continue
 			}
+			strBuilder.WriteString(string(v[len(v)-1]))
+			continue
 		} else if len(v) == 1 {
 			strBuilder.WriteString(v)
 			continue
-		} else {
-			curStr = string(v[0])
 		}
+
+		curStr = string(v[0])
 		curFactor, _ := strconv.Atoi(string(v[len(v)-1]))
-		if curFactor == 0 {
-			continue
+		if curFactor != 0 {
+			preparedStr := strings.Repeat(curStr, curFactor)
+			strBuilder.WriteString(preparedStr)
 		}
-		preparedStr := strings.Repeat(curStr, curFactor)
-		strBuilder.WriteString(preparedStr)
 	}
 
 	return strBuilder.String(), nil
