@@ -14,7 +14,7 @@ func Unpack(str string) (string, error) {
 		return "", regexpValidate(str)
 	}
 
-	splitByRegexp := splitByRegex(str)
+	splitByRegexp := SplitByRegex(str)
 
 	var strBuilder strings.Builder
 	var curStr string
@@ -57,6 +57,6 @@ func regexpValidate(str string) error {
 	return nil
 }
 
-func splitByRegex(str string) []string {
+func SplitByRegex(str string) []string {
 	return regexp.MustCompile(`[[:alpha:]|[:punct:]]{1}\d{0,2}`).FindAllString(str, -1)
 }
