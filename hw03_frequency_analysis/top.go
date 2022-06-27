@@ -1,44 +1,16 @@
 package hw03frequencyanalysis
 
 import (
+	"sort"
 	"strings"
 )
 
-type SD []int
-type SW []string
-
-func (s *SD) Add(sStr *SW, newVal string, newInt int) {
-	if len(*s) == 0 {
-		*s = append(*s, newInt)
-		*sStr = append(*sStr, newVal)
-		return
-	}
-	for i, val := range *s {
-		oldS := *s
-		oldStr := *sStr
-		if newInt > val {
-			// ints
-			partBefore := make([]int, len(oldS[:i]))
-			partAfter := make([]int, len(oldS[i:]))
-			copy(partBefore, oldS[:i])
-			copy(partAfter, oldS[i:])
-			r := append(partBefore, newInt)
-			*s = append(r, partAfter...)
-
-			// strings
-			partStringBefore := make([]string, len(oldStr[:i]))
-			partStringAfter := make([]string, len(oldStr[i:]))
-			copy(partStringBefore, oldStr[:i])
-			copy(partStringAfter, oldStr[i:])
-			rStr := append(partStringBefore, newVal)
-			*sStr = append(rStr, partStringAfter...)
-
-			return
-		}
-	}
-	*s = append(*s, newInt)
-	*sStr = append(*sStr, newVal)
+type CustomMap struct {
+	word  string
+	count int
 }
+
+const maxRes = 10
 
 func Top10(text string) []string {
 	matches := strings.Fields(text)
@@ -46,15 +18,26 @@ func Top10(text string) []string {
 	for _, v := range matches {
 		m[v]++
 	}
-	sInt := new(SD)
-	sStr := new(SW)
-	for str, count := range m {
-		sInt.Add(sStr, str, count)
+	sliceCM := make([]CustomMap, 0)
+	for i, v := range m {
+		sliceCM = append(sliceCM, CustomMap{i, v})
 	}
-	res := *sStr
-	if len(res) == 0 {
+
+	sort.Slice(sliceCM, func(i, j int) bool {
+		if sliceCM[i].count == sliceCM[j].count {
+			return sliceCM[i].word < sliceCM[j].word
+		}
+		return sliceCM[i].count > sliceCM[j].count
+	})
+
+	if len(sliceCM) == 0 {
 		return nil
 	}
 
-	return res[:10]
+	res := make([]string, maxRes)
+	for i, v := range sliceCM[:maxRes] {
+		res[i] = v.word
+	}
+
+	return res
 }
