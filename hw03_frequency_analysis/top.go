@@ -15,15 +15,16 @@ const maxRes = 10
 
 func Top10(text string) []string {
 	matches := strings.Fields(text)
-	r := regexp.MustCompile(`[.,!-]`)
+	r := regexp.MustCompile(`[.,!']`)
 	m := make(map[string]int)
 	for _, v := range matches {
 		str := r.ReplaceAllString(v, "")
-		if str != "" {
-			m[strings.ToLower(str)]++
+		if str == "-" {
+			continue
 		}
+		m[strings.ToLower(str)]++
 	}
-	sliceCM := make([]CustomMap, 0)
+	sliceCM := make([]CustomMap, 0, len(m))
 	for i, v := range m {
 		sliceCM = append(sliceCM, CustomMap{i, v})
 	}

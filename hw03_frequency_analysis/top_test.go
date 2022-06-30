@@ -61,6 +61,10 @@ var textPotter = `
 
 var textPotterLessText = `
 	It was on the corner
+`
+
+var textMostCommonMistakes = `
+	Нога нога! нога, 'нога' какой-то какойто
 	`
 
 func TestTop10(t *testing.T) {
@@ -116,5 +120,13 @@ func TestTop10(t *testing.T) {
 	})
 	t.Run("Harry Potter less words", func(t *testing.T) {
 		require.Len(t, Top10(textPotterLessText), 5)
+	})
+	t.Run("Most common mistakes", func(t *testing.T) {
+		expected := []string{
+			"нога",     // 4
+			"какой-то", // 1
+			"какойто",  // 1
+		}
+		require.Equal(t, expected, Top10(textMostCommonMistakes))
 	})
 }
