@@ -13,12 +13,13 @@ type CustomMap struct {
 
 const maxRes = 10
 
+var reg = regexp.MustCompile(`[.,!']`)
+
 func Top10(text string) []string {
 	matches := strings.Fields(text)
-	r := regexp.MustCompile(`[.,!']`)
 	m := make(map[string]int)
 	for _, v := range matches {
-		str := r.ReplaceAllString(v, "")
+		str := reg.ReplaceAllString(v, "")
 		if str == "-" {
 			continue
 		}
