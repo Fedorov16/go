@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -14,9 +15,16 @@ const maxRes = 10
 
 func Top10(text string) []string {
 	matches := strings.Fields(text)
+	r, err := regexp.Compile(`[.,!-]`)
+	if err != nil {
+		return nil
+	}
 	m := make(map[string]int)
 	for _, v := range matches {
-		m[v]++
+		str := r.ReplaceAllString(v, "")
+		if str != "" {
+			m[strings.ToLower(str)]++
+		}
 	}
 	sliceCM := make([]CustomMap, 0)
 	for i, v := range m {
@@ -34,8 +42,13 @@ func Top10(text string) []string {
 		return nil
 	}
 
-	res := make([]string, maxRes)
-	for i, v := range sliceCM[:maxRes] {
+	maxVal := maxRes
+	if maxRes > len(m) {
+		maxVal = len(m)
+	}
+
+	res := make([]string, maxVal, len(m))
+	for i, v := range sliceCM[:maxVal] {
 		res[i] = v.word
 	}
 
