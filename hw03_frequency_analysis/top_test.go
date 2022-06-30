@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -43,12 +43,36 @@ var text = `Как видите, он  спускается  по  лестни�
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
 
+var textPotter = `
+	It was on the corner of the street that he noticed the first sign 
+	of something peculiar - a cat reading a map. For a second, Mr 
+	Dursley didn’t realise what he had seen - then he jerked his head 
+	around to look again. There was a tabby cat standing on the corner 
+	of Privet Drive, but there wasn’t a map in sight. What could 
+	he have been thinking of? It must have been a trick of the light. 
+	Mr Dursley blinked and stared at the cat. It stared back. As Mr 
+	Dursley drove around the corner and up the road, he watched the 
+	cat in his mirror. It was now reading the sign that said Privet Drive 
+	- no, looking at the sign; cats couldn’t read maps or signs. Mr 
+	Dursley gave himself a little shake and put the cat out of his 
+	mind. As he drove towards town he thought of nothing except a 
+	large order of drills he was hoping to get that day.
+	`
+
+var textPotterLessText = `
+	It was on the corner
+`
+
+var textMostCommonMistakes = `
+	Нога нога! нога, 'нога' какой-то какойто
+	`
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
 	})
 
-	t.Run("positive test", func(t *testing.T) {
+	t.Run("Vini Puh", func(t *testing.T) {
 		if taskWithAsteriskIsCompleted {
 			expected := []string{
 				"а",         // 8
@@ -78,5 +102,31 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+	t.Run("Harry Potter", func(t *testing.T) {
+		expected := []string{
+			"the",     // 16
+			"a",       // 8
+			"he",      // 8
+			"of",      // 7
+			"cat",     // 5
+			"dursley", // 4
+			"it",      // 4
+			"mr",      // 4
+			"was",     // 4
+			"and",     // 3
+		}
+		require.Equal(t, expected, Top10(textPotter))
+	})
+	t.Run("Harry Potter less words", func(t *testing.T) {
+		require.Len(t, Top10(textPotterLessText), 5)
+	})
+	t.Run("Most common mistakes", func(t *testing.T) {
+		expected := []string{
+			"нога",     // 4
+			"какой-то", // 1
+			"какойто",  // 1
+		}
+		require.Equal(t, expected, Top10(textMostCommonMistakes))
 	})
 }
