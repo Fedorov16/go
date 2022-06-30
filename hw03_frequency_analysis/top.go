@@ -15,10 +15,7 @@ const maxRes = 10
 
 func Top10(text string) []string {
 	matches := strings.Fields(text)
-	r, err := regexp.Compile(`[.,!-]`)
-	if err != nil {
-		return nil
-	}
+	r := regexp.MustCompile(`[.,!-]`)
 	m := make(map[string]int)
 	for _, v := range matches {
 		str := r.ReplaceAllString(v, "")

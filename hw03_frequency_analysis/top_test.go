@@ -104,7 +104,7 @@ func TestTop10(t *testing.T) {
 			"the",     // 16
 			"a",       // 8
 			"he",      // 8
-			"of",      //7
+			"of",      // 7
 			"cat",     // 5
 			"dursley", // 4
 			"it",      // 4
