@@ -8,6 +8,7 @@ type List interface {
 	PushBack(v interface{}) *ListItem
 	Remove(i *ListItem)
 	MoveToFront(i *ListItem)
+	CheckElem(v ListItem) (*ListItem, bool)
 }
 
 type ListItem struct {
@@ -75,9 +76,9 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-	cur := l.head
-	for cur != i {
-		cur = l.head.Next
+	cur, ok := l.CheckElem(*i)
+	if !ok {
+		return
 	}
 
 	cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
@@ -100,6 +101,22 @@ func (l *list) MoveToFront(i *ListItem) {
 	i.Next.Prev = i.Prev
 
 	l.PushFront(i.Value)
+}
+
+func (l *list) CheckElem(v ListItem) (*ListItem, bool) {
+	if l.len == 0 {
+		return nil, false
+	}
+	cur := *l.head
+	for cur != v && cur.Next != nil {
+		cur = *l.head.Next
+	}
+
+	if cur != v {
+		return nil, false
+	}
+
+	return &cur, true
 }
 
 func NewList() List {

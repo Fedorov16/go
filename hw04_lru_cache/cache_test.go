@@ -20,6 +20,29 @@ func TestCache(t *testing.T) {
 		require.False(t, ok)
 	})
 
+	t.Run("clear cache", func(t *testing.T) {
+		c := NewCache(10)
+
+		c.Set("a1", 1)
+		c.Set("a2", 2)
+
+		v, ok := c.Get("a1")
+		require.True(t, ok)
+		require.Equal(t, 1, v)
+
+		v, ok = c.Get("a2")
+		require.True(t, ok)
+		require.Equal(t, 2, v)
+
+		c.Clear()
+
+		_, ok = c.Get("a1")
+		require.False(t, ok)
+
+		_, ok = c.Get("a2")
+		require.False(t, ok)
+	})
+
 	t.Run("simple", func(t *testing.T) {
 		c := NewCache(5)
 
