@@ -20,6 +20,28 @@ func TestCache(t *testing.T) {
 		require.False(t, ok)
 	})
 
+	t.Run("check values exists", func(t *testing.T) {
+		c := NewCache(10)
+		for i := 0; i < 10; i++ {
+			exist := c.Set(Key("key"+strconv.Itoa(i)), i*11)
+			require.False(t, exist)
+		}
+
+		for i := 0; i < 10; i++ {
+			exist := c.Set(Key("key"+strconv.Itoa(i)), i*11)
+			require.True(t, exist)
+		}
+	})
+
+	t.Run("set the last added value first in queue", func(t *testing.T) {
+		c := createSimpleCacheList(5, 10)
+
+		lastItem := c.(*lruCache).queue.Back().Value.(cacheItem).value
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 0, lastItem)
+		require.Equal(t, 44, firstItem)
+	})
+
 	t.Run("clear cache", func(t *testing.T) {
 		c := NewCache(10)
 
@@ -73,8 +95,41 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := createSimpleCacheList(10, 10)
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 99, firstItem)
+
+		// first Elem After Set
+		c.Set("key5", 123)
+		firstItem = c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 123, firstItem)
+
+		// check Lengh After Set
+		require.Equal(t, 10, c.(*lruCache).queue.Len())
+		require.Equal(t, 10, len(c.(*lruCache).items))
+
+		// first Elem After Get
+		c.Get("key4")
+		firstItem = c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 44, firstItem)
+
+		// check Lengh After Get
+		require.Equal(t, 10, c.(*lruCache).queue.Len())
+		require.Equal(t, 10, len(c.(*lruCache).items))
+
+		// check length and value after new one
+		c.Set("over10", 666)
+		require.Equal(t, 10, c.(*lruCache).queue.Len())
+		require.Equal(t, 10, len(c.(*lruCache).items))
 	})
+}
+
+func createSimpleCacheList(count, capping int) Cache {
+	c := NewCache(capping)
+	for i := 0; i < count; i++ {
+		c.Set(Key("key"+strconv.Itoa(i)), i*11)
+	}
+	return c
 }
 
 func TestCacheMultithreading(t *testing.T) {

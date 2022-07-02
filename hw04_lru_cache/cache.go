@@ -28,15 +28,23 @@ func NewCache(capacity int) Cache {
 }
 
 func (c *lruCache) Set(key Key, value interface{}) bool {
-	item := cacheItem{key, value}
-	_, exist := c.queue.CheckElem(ListItem{item, nil, nil})
-
+	val := cacheItem{key, value}
+	_, exist := c.items[key]
 	if exist {
-		return true
+		c.queue.MoveToFront(&ListItem{val, nil, nil})
+		c.items[key] = c.queue.Front()
+		return exist
+	}
+	c.items[key] = c.queue.PushFront(val)
+	if len(c.items) > 10 {
+		i := c.queue.Back().Value.(cacheItem).key
+
+		delete(c.items, i)
+		elem := c.queue.Back()
+		c.queue.Remove(elem)
 	}
 
-	c.items[key] = c.queue.PushFront(item)
-	return false
+	return exist
 }
 
 func (c *lruCache) Get(key Key) (interface{}, bool) {
@@ -44,8 +52,9 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 	if !ok {
 		return nil, false
 	}
-	i := item.Value.(cacheItem)
-	return i.value, true
+	i := item.Value
+	c.queue.MoveToFront(&ListItem{i, nil, nil})
+	return i.(cacheItem).value, true
 }
 
 func (c *lruCache) Clear() {

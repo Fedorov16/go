@@ -81,42 +81,98 @@ func (l *list) Remove(i *ListItem) {
 		return
 	}
 
+	switch l.head.Value.(type) {
+	case cacheItem:
+		if l.tail.Value.(cacheItem).key == cur.Value.(cacheItem).key {
+			l.tail.Prev.Next = nil
+			l.tail = nil
+			l.len--
+			return
+		}
+	default:
+		if l.tail.Value == cur.Value {
+			l.tail.Prev.Next = nil
+			l.tail = nil
+			l.len--
+			return
+		}
+	}
+
 	cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 
 	l.len--
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	if l.head == i {
+	cur, ok := l.CheckElem(*i)
+	if !ok {
 		return
 	}
 
-	if l.tail == i {
-		i.Prev.Next = nil
-		l.PushFront(i.Value)
+	var key, headKey, tailKey interface{}
+
+	switch l.head.Value.(type) {
+	case cacheItem:
+		key = cur.Value.(cacheItem).key
+		headKey = l.head.Value.(cacheItem).key
+		tailKey = l.tail.Value.(cacheItem).key
+	default:
+		key = cur.Value
+		headKey = l.head.Value
+		tailKey = l.tail.Value
+	}
+
+	if headKey == key {
 		return
 	}
 
-	i.Prev.Next = i.Next
-	i.Next.Prev = i.Prev
+	if tailKey == key {
+		l.tail.Prev.Next = nil
+		l.tail = l.tail.Prev
+		l.len--
+		l.PushFront(cur.Value)
+		return
+	}
 
-	l.PushFront(i.Value)
+	cur.Prev.Next = cur.Next
+	cur.Next.Prev = cur.Prev
+	l.len--
+	l.PushFront(cur.Value)
 }
 
 func (l *list) CheckElem(v ListItem) (*ListItem, bool) {
 	if l.len == 0 {
 		return nil, false
 	}
-	cur := *l.head
-	for cur != v && cur.Next != nil {
-		cur = *l.head.Next
+
+	switch l.head.Value.(type) {
+	case cacheItem:
+		return checkCacheItem(*l, v)
+	default:
+		cur := *l.head
+		for cur.Value != v.Value && cur.Next != nil {
+			cur = *cur.Next
+		}
+
+		if cur.Value != v.Value {
+			return nil, false
+		}
+
+		return &cur, true
+	}
+}
+
+func checkCacheItem(l list, v ListItem) (*ListItem, bool) {
+	cur := l.head
+	for cur.Value.(cacheItem).key != v.Value.(cacheItem).key && cur.Next != nil {
+		cur = cur.Next
 	}
 
-	if cur != v {
+	if cur.Value.(cacheItem).key != v.Value.(cacheItem).key {
 		return nil, false
 	}
-
-	return &cur, true
+	cur.Value = v.Value
+	return cur, true
 }
 
 func NewList() List {
