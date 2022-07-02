@@ -8,7 +8,7 @@ type List interface {
 	PushBack(v interface{}) *ListItem
 	Remove(i *ListItem)
 	MoveToFront(i *ListItem)
-	CheckElem(v ListItem) (*ListItem, bool)
+	FindElem(v ListItem) (*ListItem, bool)
 }
 
 type ListItem struct {
@@ -76,78 +76,68 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-	cur, ok := l.CheckElem(*i)
-	if !ok {
+	cur, exist := l.FindElem(*i)
+	if !exist {
 		return
 	}
+	cur.Value = i.Value
 
-	switch l.head.Value.(type) {
-	case cacheItem:
-		if l.tail.Value.(cacheItem).key == cur.Value.(cacheItem).key {
-			l.tail.Prev.Next = nil
-			l.tail = nil
-			l.len--
-			return
-		}
-	default:
-		if l.tail.Value == cur.Value {
-			l.tail.Prev.Next = nil
-			l.tail = nil
-			l.len--
-			return
-		}
+	_, curKey, tailKey := getKeys(*l, *cur)
+
+	if tailKey == curKey {
+		l.tail.Prev.Next = nil
+		l.tail = nil
+	} else {
+		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 	}
-
-	cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 
 	l.len--
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	cur, ok := l.CheckElem(*i)
+	cur, ok := l.FindElem(*i)
 	if !ok {
 		return
 	}
+	cur.Value = i.Value
 
-	var key, headKey, tailKey interface{}
+	headKey, curKey, tailKey := getKeys(*l, *cur)
 
-	switch l.head.Value.(type) {
-	case cacheItem:
-		key = cur.Value.(cacheItem).key
-		headKey = l.head.Value.(cacheItem).key
-		tailKey = l.tail.Value.(cacheItem).key
-	default:
-		key = cur.Value
-		headKey = l.head.Value
-		tailKey = l.tail.Value
-	}
-
-	if headKey == key {
+	if headKey == curKey {
 		return
 	}
 
-	if tailKey == key {
+	if tailKey == curKey {
 		l.tail.Prev.Next = nil
 		l.tail = l.tail.Prev
-		l.len--
-		l.PushFront(cur.Value)
-		return
+	} else {
+		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 	}
 
-	cur.Prev.Next = cur.Next
-	cur.Next.Prev = cur.Prev
 	l.len--
 	l.PushFront(cur.Value)
 }
 
-func (l *list) CheckElem(v ListItem) (*ListItem, bool) {
+func NewList() List {
+	return new(list)
+}
+
+func (l *list) FindElem(v ListItem) (*ListItem, bool) {
 	if l.len == 0 {
 		return nil, false
 	}
 
 	switch l.head.Value.(type) {
 	case cacheItem:
-		return checkCacheItem(*l, v)
+		cur := *l.head
+		for cur.Value.(cacheItem).key != v.Value.(cacheItem).key && cur.Next != nil {
+			cur = *cur.Next
+		}
+
+		if cur.Value.(cacheItem).key != v.Value.(cacheItem).key {
+			return nil, false
+		}
+		return &cur, true
 	default:
 		cur := *l.head
 		for cur.Value != v.Value && cur.Next != nil {
@@ -162,19 +152,17 @@ func (l *list) CheckElem(v ListItem) (*ListItem, bool) {
 	}
 }
 
-func checkCacheItem(l list, v ListItem) (*ListItem, bool) {
-	cur := l.head
-	for cur.Value.(cacheItem).key != v.Value.(cacheItem).key && cur.Next != nil {
-		cur = cur.Next
+func getKeys(l list, cur ListItem) (interface{}, interface{}, interface{}) {
+	var headKey, curKey, tailKey interface{}
+	_, isCache := cur.Value.(cacheItem)
+	if isCache {
+		headKey = l.head.Value.(cacheItem).key
+		curKey = cur.Value.(cacheItem).key
+		tailKey = l.tail.Value.(cacheItem).key
+	} else {
+		headKey = l.head.Value
+		tailKey = l.tail.Value
+		curKey = cur.Value
 	}
-
-	if cur.Value.(cacheItem).key != v.Value.(cacheItem).key {
-		return nil, false
-	}
-	cur.Value = v.Value
-	return cur, true
-}
-
-func NewList() List {
-	return new(list)
+	return headKey, curKey, tailKey
 }
