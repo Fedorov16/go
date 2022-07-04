@@ -36,7 +36,7 @@ func (c *lruCache) Set(key Key, value interface{}) bool {
 		return exist
 	}
 	c.items[key] = c.queue.PushFront(val)
-	if len(c.items) > 10 {
+	if len(c.items) > c.capacity {
 		i := c.queue.Back().Value.(cacheItem).key
 
 		delete(c.items, i)

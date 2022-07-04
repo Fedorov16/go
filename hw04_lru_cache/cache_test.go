@@ -94,33 +94,41 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
+	t.Run("purge logic: first Elem After Set", func(t *testing.T) {
 		c := createSimpleCacheList(10, 10)
-		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
-		require.Equal(t, 99, firstItem)
-
-		// first Elem After Set
 		c.Set("key5", 123)
-		firstItem = c.(*lruCache).queue.Front().Value.(cacheItem).value
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
 		require.Equal(t, 123, firstItem)
+	})
 
-		// check Lengh After Set
+	t.Run("purge logic: check Length After Set", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		c.Set("key5", 123)
 		require.Equal(t, 10, c.(*lruCache).queue.Len())
 		require.Equal(t, 10, len(c.(*lruCache).items))
+	})
 
-		// first Elem After Get
+	t.Run("purge logic: first Elem After Get", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		prevItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
 		c.Get("key4")
-		firstItem = c.(*lruCache).queue.Front().Value.(cacheItem).value
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
 		require.Equal(t, 44, firstItem)
+		require.NotEqual(t, prevItem, firstItem)
+	})
 
-		// check Lengh After Get
+	t.Run("purge logic: check Length After Get", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		c.Get("key4")
 		require.Equal(t, 10, c.(*lruCache).queue.Len())
 		require.Equal(t, 10, len(c.(*lruCache).items))
+	})
 
-		// check length and value after new one
+	t.Run("purge logic: check length and value after new one", func(t *testing.T) {
+		c := createSimpleCacheList(5, 5)
 		c.Set("over10", 666)
-		require.Equal(t, 10, c.(*lruCache).queue.Len())
-		require.Equal(t, 10, len(c.(*lruCache).items))
+		require.Equal(t, 5, c.(*lruCache).queue.Len())
+		require.Equal(t, 5, len(c.(*lruCache).items))
 	})
 }
 

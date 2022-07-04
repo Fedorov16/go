@@ -15,6 +15,38 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("only one Front elem", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+	})
+
+	t.Run("There is no elem for removing", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		l.PushFront(9)
+		require.Equal(t, 2, l.Len())
+		l.Remove(&ListItem{7, nil, nil})
+		require.Equal(t, 2, l.Len())
+	})
+
+	t.Run("only one Back elem", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+	})
+
+	t.Run("There is no element for moving to front", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		l.PushFront(9)
+		require.Equal(t, 9, l.Front().Value)
+		l.MoveToFront(&ListItem{7, nil, nil})
+		require.Equal(t, 9, l.Front().Value)
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
@@ -48,4 +80,31 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+}
+
+func TestFindElem(t *testing.T) {
+	l := NewList()
+	_, found := l.FindElem(ListItem{7, nil, nil})
+	require.Equal(t, false, found)
+
+	l.PushFront(43)
+	l.PushFront(55)
+	_, found = l.FindElem(ListItem{7, nil, nil})
+	require.Equal(t, false, found)
+
+	elem, found := l.FindElem(ListItem{55, nil, nil})
+	require.Equal(t, 55, elem.Value)
+	require.Equal(t, true, found)
+
+	// cache
+	c := NewCache(3)
+	c.Set("a1", 4)
+	l = c.(*lruCache).queue
+	_, found = l.FindElem(ListItem{cacheItem{"a2", 5}, nil, nil})
+	require.Equal(t, false, found)
+
+	r, found := l.FindElem(ListItem{cacheItem{"a1", 10}, nil, nil})
+	require.Equal(t, "a1", string(r.Value.(cacheItem).key))
+	require.Equal(t, 4, r.Value.(cacheItem).value)
+	require.Equal(t, true, found)
 }
