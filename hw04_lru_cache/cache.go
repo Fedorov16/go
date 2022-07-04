@@ -28,14 +28,14 @@ func NewCache(capacity int) Cache {
 }
 
 func (c *lruCache) Set(key Key, value interface{}) bool {
-	val := cacheItem{key, value}
-	_, exist := c.items[key]
+	val, exist := c.items[key]
 	if exist {
-		c.queue.MoveToFront(&ListItem{val, nil, nil})
+		val.Value = cacheItem{key, value}
+		c.queue.MoveToFront(val)
 		c.items[key] = c.queue.Front()
 		return exist
 	}
-	c.items[key] = c.queue.PushFront(val)
+	c.items[key] = c.queue.PushFront(cacheItem{key, value})
 	if len(c.items) > c.capacity {
 		i := c.queue.Back().Value.(cacheItem).key
 
@@ -53,7 +53,7 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 		return nil, false
 	}
 	i := item.Value
-	c.queue.MoveToFront(&ListItem{i, nil, nil})
+	c.queue.MoveToFront(item)
 	return i.(cacheItem).value, true
 }
 

@@ -8,7 +8,6 @@ type List interface {
 	PushBack(v interface{}) *ListItem
 	Remove(i *ListItem)
 	MoveToFront(i *ListItem)
-	FindElem(v ListItem) (*ListItem, bool)
 }
 
 type ListItem struct {
@@ -44,7 +43,7 @@ func (l list) Back() *ListItem {
 func (l *list) PushBack(v interface{}) *ListItem {
 	t := &ListItem{v, nil, nil}
 
-	if l.head == nil && l.tail == nil {
+	if l.len == 0 {
 		l.head = t
 		l.tail = t
 	} else {
@@ -61,7 +60,7 @@ func (l *list) PushBack(v interface{}) *ListItem {
 func (l *list) PushFront(v interface{}) *ListItem {
 	t := &ListItem{v, nil, nil}
 
-	if l.head == nil && l.tail == nil {
+	if l.len == 0 {
 		l.head = t
 		l.tail = t
 	} else {
@@ -75,13 +74,7 @@ func (l *list) PushFront(v interface{}) *ListItem {
 	return l.head
 }
 
-func (l *list) Remove(i *ListItem) {
-	cur, exist := l.FindElem(*i)
-	if !exist {
-		return
-	}
-	cur.Value = i.Value
-
+func (l *list) Remove(cur *ListItem) {
 	_, curKey, tailKey := getKeys(*l, *cur)
 
 	if tailKey == curKey {
@@ -94,13 +87,7 @@ func (l *list) Remove(i *ListItem) {
 	l.len--
 }
 
-func (l *list) MoveToFront(i *ListItem) {
-	cur, ok := l.FindElem(*i)
-	if !ok {
-		return
-	}
-	cur.Value = i.Value
-
+func (l *list) MoveToFront(cur *ListItem) {
 	headKey, curKey, tailKey := getKeys(*l, *cur)
 
 	if headKey == curKey {
@@ -120,36 +107,6 @@ func (l *list) MoveToFront(i *ListItem) {
 
 func NewList() List {
 	return new(list)
-}
-
-func (l *list) FindElem(v ListItem) (*ListItem, bool) {
-	if l.len == 0 {
-		return nil, false
-	}
-
-	switch l.head.Value.(type) {
-	case cacheItem:
-		cur := *l.head
-		for cur.Value.(cacheItem).key != v.Value.(cacheItem).key && cur.Next != nil {
-			cur = *cur.Next
-		}
-
-		if cur.Value.(cacheItem).key != v.Value.(cacheItem).key {
-			return nil, false
-		}
-		return &cur, true
-	default:
-		cur := *l.head
-		for cur.Value != v.Value && cur.Next != nil {
-			cur = *cur.Next
-		}
-
-		if cur.Value != v.Value {
-			return nil, false
-		}
-
-		return &cur, true
-	}
 }
 
 func getKeys(l list, cur ListItem) (interface{}, interface{}, interface{}) {
