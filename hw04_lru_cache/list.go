@@ -69,10 +69,8 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(cur *ListItem) {
-	_, curKey, tailKey := getKeys(*l, *cur)
-
-	if tailKey == curKey {
-		l.tail.Prev.Next = nil
+	if cur.Next == nil {
+		cur.Prev.Next = nil
 		l.tail = nil
 	} else {
 		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
@@ -82,15 +80,13 @@ func (l *list) Remove(cur *ListItem) {
 }
 
 func (l *list) MoveToFront(cur *ListItem) {
-	headKey, curKey, tailKey := getKeys(*l, *cur)
-
-	if headKey == curKey {
+	if cur.Prev == nil {
 		return
 	}
 
-	if tailKey == curKey {
-		l.tail.Prev.Next = nil
-		l.tail = l.tail.Prev
+	if cur.Next == nil {
+		cur.Prev.Next = nil
+		l.tail = cur.Prev
 	} else {
 		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 	}
@@ -101,19 +97,4 @@ func (l *list) MoveToFront(cur *ListItem) {
 
 func NewList() List {
 	return new(list)
-}
-
-func getKeys(l list, cur ListItem) (interface{}, interface{}, interface{}) {
-	var headKey, curKey, tailKey interface{}
-	_, isCache := cur.Value.(cacheItem)
-	if isCache {
-		headKey = l.head.Value.(cacheItem).key
-		curKey = cur.Value.(cacheItem).key
-		tailKey = l.tail.Value.(cacheItem).key
-	} else {
-		headKey = l.head.Value
-		tailKey = l.tail.Value
-		curKey = cur.Value
-	}
-	return headKey, curKey, tailKey
 }
