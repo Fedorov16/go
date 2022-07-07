@@ -62,4 +62,10 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+	t.Run("Sasha test", func(t *testing.T) {
+		l := NewList()
+		i := l.PushBack(10)
+		l.Remove(i)
+		require.Empty(t, l.Len())
+	})
 }

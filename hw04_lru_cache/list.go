@@ -69,10 +69,14 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(cur *ListItem) {
-	if cur.Next == nil {
+	switch {
+	case l.len == 1:
+		l.tail = nil
+		l.head = nil
+	case cur.Next == nil:
 		cur.Prev.Next = nil
 		l.tail = nil
-	} else {
+	default:
 		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 	}
 
