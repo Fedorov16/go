@@ -74,6 +74,8 @@ func (l *list) Remove(cur *ListItem) {
 	case cur.Next == nil:
 		l.tail = cur.Prev
 		cur.Prev.Next = nil
+	case cur.Prev == nil:
+		cur.Next.Prev = nil
 	default:
 		cur.Prev.Next, cur.Next.Prev = cur.Next, cur.Prev
 	}

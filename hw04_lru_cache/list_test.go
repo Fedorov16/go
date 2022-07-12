@@ -68,4 +68,14 @@ func TestList(t *testing.T) {
 		l.Remove(i)
 		require.Empty(t, l.Len())
 	})
+
+	t.Run("Sasha second test", func(t *testing.T) {
+		l := NewList()
+		l.PushFront(10)
+		l.PushFront(20)
+		l.PushFront(30)
+		for i := l.Front(); i != nil; i = l.Front() {
+			l.Remove(i)
+		}
+	})
 }
