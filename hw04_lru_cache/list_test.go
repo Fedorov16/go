@@ -15,6 +15,20 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("only one Front elem", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+	})
+
+	t.Run("only one Back elem", func(t *testing.T) {
+		l := NewList()
+		l.PushBack(10)
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
@@ -47,5 +61,21 @@ func TestList(t *testing.T) {
 			elems = append(elems, i.Value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
+	})
+	t.Run("Sasha test", func(t *testing.T) {
+		l := NewList()
+		i := l.PushBack(10)
+		l.Remove(i)
+		require.Empty(t, l.Len())
+	})
+
+	t.Run("Sasha second test", func(t *testing.T) {
+		l := NewList()
+		l.PushFront(10)
+		l.PushFront(20)
+		l.PushFront(30)
+		for i := l.Front(); i != nil; i = l.Front() {
+			l.Remove(i)
+		}
 	})
 }

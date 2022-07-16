@@ -20,6 +20,51 @@ func TestCache(t *testing.T) {
 		require.False(t, ok)
 	})
 
+	t.Run("check values exists", func(t *testing.T) {
+		c := NewCache(10)
+		for i := 0; i < 10; i++ {
+			exist := c.Set(Key("key"+strconv.Itoa(i)), i*11)
+			require.False(t, exist)
+		}
+
+		for i := 0; i < 10; i++ {
+			exist := c.Set(Key("key"+strconv.Itoa(i)), i*11)
+			require.True(t, exist)
+		}
+	})
+
+	t.Run("set the last added value first in queue", func(t *testing.T) {
+		c := createSimpleCacheList(5, 10)
+
+		lastItem := c.(*lruCache).queue.Back().Value.(cacheItem).value
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 0, lastItem)
+		require.Equal(t, 44, firstItem)
+	})
+
+	t.Run("clear cache", func(t *testing.T) {
+		c := NewCache(10)
+
+		c.Set("a1", 1)
+		c.Set("a2", 2)
+
+		v, ok := c.Get("a1")
+		require.True(t, ok)
+		require.Equal(t, 1, v)
+
+		v, ok = c.Get("a2")
+		require.True(t, ok)
+		require.Equal(t, 2, v)
+
+		c.Clear()
+
+		_, ok = c.Get("a1")
+		require.False(t, ok)
+
+		_, ok = c.Get("a2")
+		require.False(t, ok)
+	})
+
 	t.Run("simple", func(t *testing.T) {
 		c := NewCache(5)
 
@@ -49,17 +94,56 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+	t.Run("purge logic: first Elem After Set", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		c.Set("key5", 123)
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 123, firstItem)
+	})
+
+	t.Run("purge logic: check Length After Set", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		c.Set("key5", 123)
+		require.Equal(t, 10, c.(*lruCache).queue.Len())
+		require.Equal(t, 10, len(c.(*lruCache).items))
+	})
+
+	t.Run("purge logic: first Elem After Get", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		prevItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		c.Get("key4")
+		firstItem := c.(*lruCache).queue.Front().Value.(cacheItem).value
+		require.Equal(t, 44, firstItem)
+		require.NotEqual(t, prevItem, firstItem)
+	})
+
+	t.Run("purge logic: check Length After Get", func(t *testing.T) {
+		c := createSimpleCacheList(10, 10)
+		c.Get("key4")
+		require.Equal(t, 10, c.(*lruCache).queue.Len())
+		require.Equal(t, 10, len(c.(*lruCache).items))
+	})
+
+	t.Run("purge logic: check length and value after new one", func(t *testing.T) {
+		c := createSimpleCacheList(5, 5)
+		c.Set("over10", 666)
+		require.Equal(t, 5, c.(*lruCache).queue.Len())
+		require.Equal(t, 5, len(c.(*lruCache).items))
 	})
 }
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
+func createSimpleCacheList(count, capping int) Cache {
+	c := NewCache(capping)
+	for i := 0; i < count; i++ {
+		c.Set(Key("key"+strconv.Itoa(i)), i*11)
+	}
+	return c
+}
 
+func TestCacheMultithreading(t *testing.T) {
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -72,6 +156,13 @@ func TestCacheMultithreading(t *testing.T) {
 		defer wg.Done()
 		for i := 0; i < 1_000_000; i++ {
 			c.Get(Key(strconv.Itoa(rand.Intn(1_000_000))))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 1_000_000; i++ {
+			c.Clear()
 		}
 	}()
 
