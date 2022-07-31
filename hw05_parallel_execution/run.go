@@ -3,6 +3,7 @@ package hw05parallelexecution
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 )
 
 var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
@@ -22,8 +23,9 @@ func Run(tasks []Task, n, m int) error {
 	wg.Add(n)
 	defer wg.Wait()
 
-	var errorsCount int
 	var err error
+	var errorsCount int32
+	atomic.StoreInt32(&errorsCount, 0)
 
 	for i := 0; i < n; i++ {
 		go RunWorker(chWorkers, &wg, &errorsCount)
@@ -31,7 +33,7 @@ func Run(tasks []Task, n, m int) error {
 
 	for _, v := range tasks {
 		chWorkers <- v
-		if errorsCount >= m {
+		if atomic.LoadInt32(&errorsCount) >= int32(m) {
 			err = ErrErrorsLimitExceeded
 			break
 		}
@@ -41,11 +43,11 @@ func Run(tasks []Task, n, m int) error {
 	return err
 }
 
-func RunWorker(task <-chan Task, wg *sync.WaitGroup, errorsCount *int) {
+func RunWorker(task <-chan Task, wg *sync.WaitGroup, errorsCount *int32) {
 	defer wg.Done()
 	for v := range task {
 		if v() != nil {
-			*errorsCount++
+			atomic.AddInt32(errorsCount, 1)
 		}
 	}
 }
