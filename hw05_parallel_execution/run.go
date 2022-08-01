@@ -21,7 +21,6 @@ func Run(tasks []Task, n, m int) error {
 
 	wg := sync.WaitGroup{}
 	wg.Add(n)
-	defer wg.Wait()
 
 	var err error
 	var errorsCount int32
@@ -40,6 +39,7 @@ func Run(tasks []Task, n, m int) error {
 	}
 	close(chWorkers)
 
+	wg.Wait()
 	return err
 }
 

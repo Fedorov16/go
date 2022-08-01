@@ -1,4 +1,4 @@
-module github.com/Fedorov16/hw05_parallel_execution
+module github.com/Fedorov16/go/hw05_parallel_execution
 
 go 1.16
 
