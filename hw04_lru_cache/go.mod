@@ -1,4 +1,4 @@
-module github.com/Fedorov16/hw04_lru_cache
+module github.com/Fedorov16/go/hw04_lru_cache
 
 go 1.16
 
