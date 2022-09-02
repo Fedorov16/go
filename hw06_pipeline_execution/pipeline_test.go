@@ -11,6 +11,7 @@ import (
 const (
 	sleepPerStage = time.Millisecond * 100
 	fault         = sleepPerStage / 2
+	bigDataDelta  = sleepPerStage
 )
 
 func TestPipeline(t *testing.T) {
@@ -89,5 +90,33 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("big data case", func(t *testing.T) {
+		in := make(Bi)
+		var data []int
+		for i := 1; i <= 50; i++ {
+			data = append(data, i)
+		}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		result := make([]string, 0, 50)
+		start := time.Now()
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+		elapsed := time.Since(start)
+
+		require.Len(t, result, 50)
+		require.Less(t,
+			int64(elapsed),
+			// 5.5s for processing 50 values in 4 stages (100ms every) concurrently
+			int64(sleepPerStage)*int64(len(stages)+len(data)-1)+int64(fault+bigDataDelta))
 	})
 }
