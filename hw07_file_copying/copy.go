@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	progressbar "github.com/schollz/progressbar/v3"
+	"github.com/schollz/progressbar/v3"
 )
 
 var ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
