@@ -2,14 +2,75 @@ package main
 
 import (
 	"errors"
+	"io"
+	"os"
+
+	"github.com/schollz/progressbar/v2"
 )
 
-var (
-	ErrUnsupportedFile       = errors.New("unsupported file")
-	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
-)
+var ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	// Place your code here.
+	fileStat, err := os.Stat(fromPath)
+	if err != nil {
+		return err
+	}
+
+	if fileStat.Size() < offset {
+		return ErrOffsetExceedsFileSize
+	}
+
+	if limit > fileStat.Size() || limit == 0 {
+		limit = fileStat.Size()
+	}
+
+	if limit+offset > fileStat.Size() {
+		limit = fileStat.Size() - offset
+	}
+
+	file, err := os.Open(fromPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Seek(offset, io.SeekStart)
+	if err != nil {
+		return err
+	}
+
+	newFile, err := os.Create(toPath)
+	if err != nil {
+		return err
+	}
+	defer newFile.Close()
+
+	return copyPath(file, newFile, limit)
+}
+
+func copyPath(fromFile *os.File, toFile *os.File, limit int64) error {
+	maxReadByte := int64(50)
+	resultByte := limit
+
+	barLength := resultByte / maxReadByte
+	if barLength < 1 {
+		barLength = 1
+	}
+	bar := progressbar.New64(barLength)
+
+	for resultByte > 0 {
+		if resultByte < maxReadByte {
+			maxReadByte = resultByte
+		}
+		_, err := io.CopyN(toFile, fromFile, maxReadByte)
+		if err != nil {
+			return err
+		}
+		resultByte -= maxReadByte
+		bar.Add(1)
+	}
+
+	bar.Finish()
+
 	return nil
 }
