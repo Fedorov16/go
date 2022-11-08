@@ -28,13 +28,13 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		limit = fileStat.Size() - offset
 	}
 
-	file, err := os.OpenFile(fromPath, os.O_RDONLY, 0o777)
+	file, err := os.Open(fromPath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.Seek(offset, 0)
+	_, err = file.Seek(offset, io.SeekStart)
 	if err != nil {
 		return err
 	}
@@ -45,12 +45,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	}
 	defer newFile.Close()
 
-	err = copyPath(file, newFile, limit)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return copyPath(file, newFile, limit)
 }
 
 func copyPath(fromFile *os.File, toFile *os.File, limit int64) error {
