@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/schollz/progressbar/v3"
+	"github.com/schollz/progressbar/v2"
 )
 
 var ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
@@ -56,7 +56,7 @@ func copyPath(fromFile *os.File, toFile *os.File, limit int64) error {
 	if barLength < 1 {
 		barLength = 1
 	}
-	bar := progressbar.Default(barLength)
+	bar := progressbar.New64(barLength)
 
 	for resultByte > 0 {
 		if resultByte < maxReadByte {
