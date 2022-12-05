@@ -1,16 +1,49 @@
 package main
 
+import (
+	"bufio"
+	"bytes"
+	"io"
+	"os"
+	"strings"
+)
+
 type Environment map[string]EnvValue
 
-// EnvValue helps to distinguish between empty files and files with the first empty line.
 type EnvValue struct {
 	Value      string
 	NeedRemove bool
 }
 
-// ReadDir reads a specified directory and returns map of env variables.
-// Variables represented as files where filename is name of variable, file first line is a value.
 func ReadDir(dir string) (Environment, error) {
-	// Place your code here
-	return nil, nil
+	dirs, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	env := Environment{}
+	for _, v := range dirs {
+		file, err := os.Open(dir + "/" + v.Name())
+
+		reader := bufio.NewReader(file)
+		line, _, err := reader.ReadLine()
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+
+		if bytes.Contains(line, []byte{0x00}) {
+			line = bytes.Replace(line, []byte{0x00}, []byte("\n"), 1)
+		}
+
+		lineString := strings.TrimRight(string(line), " ")
+
+		if len(line) == 0 {
+			env[v.Name()] = EnvValue{Value: lineString, NeedRemove: true}
+			continue
+		}
+
+		env[v.Name()] = EnvValue{Value: lineString, NeedRemove: false}
+	}
+
+	return env, nil
 }
